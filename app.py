@@ -6,7 +6,7 @@ from flask import redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, Cafe, City
-
+from forms import AddEditCafeForm
 from sqlalchemy.exc import IntegrityError
 
 from secrets import FLASK_SECRET_KEY
@@ -91,3 +91,58 @@ def cafe_detail(cafe_id):
         'cafe/detail.html',
         cafe=cafe,
     )
+
+@app.route("/cafes/add", methods=["GET", "POST"])
+def cafe_add():
+    """ show form for adding cafe and handle form"""
+    form = AddEditCafeForm()
+
+    #get city_code choice from current cities in db
+    form.city_code.choices = City.get_all_cities()
+    
+    if form.validate_on_submit():
+        new_cafe = Cafe(
+            name=form.name.data,
+            description=form.description.data,
+            url=form.url.data,
+            address=form.address.data,
+            city_code=form.city_code.data,
+            image_url=form.image_url.data or None
+        )
+
+        db.session.add(new_cafe)
+        db.session.commit()
+        
+        flash(f'{new_cafe.name} added')
+        return redirect(f"/cafes/{new_cafe.id}")
+    
+    return render_template("cafe/add-form.html", form=form)
+
+@app.route('/cafes/<cafe_id>/edit', methods=["GET", "POST"])
+def cafe_edit(cafe_id):
+    """ show form for editting cafe and handle form"""
+    cafe = Cafe.query.get(cafe_id)
+    form = AddEditCafeForm(obj=cafe)
+
+    #get city_code choice from current cities in db
+    form.city_code.choices = City.get_all_cities()
+    
+    if form.validate_on_submit():
+        cafe.name = form.name.data
+        cafe.description = form.description.data
+        cafe.url = form.url.data
+        cafe.address = form.address.data
+        cafe.city_code = form.city_code.data
+        cafe.image_url = form.image_url.data 
+        
+        db.session.commit()
+        
+        flash(f'{cafe.name} edited')
+        return redirect(f"/cafes/{cafe.id}")
+    
+    return render_template("cafe/edit-form.html", form=form, cafe=cafe)
+
+    #######################################
+    # users
+
+    

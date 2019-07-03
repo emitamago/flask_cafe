@@ -33,8 +33,15 @@ class City(db.Model):
         db.String(2),
         nullable=False,
     )
+    
+    @classmethod
+    def get_all_cities(cls):
+        """get all cities from database, return list of turple """
+        cities = cls.query.all()
+        choices = [(city.code, city.name) for city in cities]
+        return choices
 
-
+    
 class Cafe(db.Model):
     """Cafe information."""
 
@@ -83,12 +90,85 @@ class Cafe(db.Model):
     city = db.relationship("City", backref='cafes')
 
     
+    
 
     def get_city_state(self):
         """Return 'city, state' for cafe."""
 
         city = self.city
         return f'{city.name}, {city.state}'
+
+
+class User():
+    """ Model for users"""
+    __tablename__ = 'users'
+
+    def __repr__(self):
+        return f'<User id={self.id} username="{self.username}">'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+    
+    username =  db.Column(
+        db.String,
+        nullable=False,
+        unique=True
+    )
+    
+    admin = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    email = db.Column(
+        db.String,
+        nullable=False,
+        unique=True
+    )
+
+    first_name = db.Column(
+        db.String,
+        nullable=False,
+    )
+
+    last_name = db.Column(
+        db.String,
+        nullable=False,
+    )
+    
+    description = db.Column(
+        db.Text,
+        nullable=True
+    )
+   
+    image_url = db.Column(
+       db.String,
+       nullable=False,
+       default= '/static/images/default-pic.png'
+   )
+    
+    hashed_password = db.Column(
+        db.String,
+        nullable=False,
+        unique=True
+    )
+    
+    @classmethod
+    def register_user(username,
+                                admin,
+                                email,
+                                first_name,
+                                last_name,
+                                description,
+                                image_url,
+                                password,
+                                ):
+        """ """
+        hashed_password = bcrypt.generate_password_hash(password)
+
 
 
 def connect_db(app):

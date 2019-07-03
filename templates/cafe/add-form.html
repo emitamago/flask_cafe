@@ -2,9 +2,15 @@
 
 {% block title %} Add Cafe {% endblock %}
 
+
 {% block content %}
 
 <h1 class="mb-4">Add Cafe</h1>
+
+<form method="POST">
+    {% include '_form.html' %}
+    <button>ADD</button>
+</form>
 
 <!-- form goes here -->
 
