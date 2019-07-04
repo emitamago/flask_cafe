@@ -99,7 +99,7 @@ class Cafe(db.Model):
         return f'{city.name}, {city.state}'
 
 
-class User():
+class User(db.Model):
     """ Model for users"""
     __tablename__ = 'users'
 
@@ -111,7 +111,7 @@ class User():
         primary_key=True,
     )
     
-    username =  db.Column(
+    username = db.Column(
         db.String,
         nullable=False,
         unique=True
@@ -147,8 +147,8 @@ class User():
     image_url = db.Column(
        db.String,
        nullable=False,
-       default= '/static/images/default-pic.png'
-   )
+       default='/static/images/default-pic.png'
+    )
     
     hashed_password = db.Column(
         db.String,
@@ -157,18 +157,42 @@ class User():
     )
     
     @classmethod
-    def register_user(username,
-                                admin,
-                                email,
-                                first_name,
-                                last_name,
-                                description,
-                                image_url,
-                                password,
-                                ):
-        """ """
+    def register(cls,
+                 username,
+                 email,
+                 first_name,
+                 last_name,
+                 description,
+                 password,
+                 admin=False,
+                 image_url=None):
+        """ create user with encryted password and return user """
         hashed_password = bcrypt.generate_password_hash(password)
+        hashed_utf8 = hashed_password.decode("utf8")
 
+        user = cls(
+            username=username,
+            admin=admin,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            description=description,
+            hashed_password=hashed_utf8,
+            image_url=image_url)
+    
+        return user
+    
+    @classmethod
+    def authenticate(cls, username, password):
+        """Validate user if the user exit. Return True exit, False if not """
+        u = User.query.filter_by(username=username).first()
+        if u and bcrypt.check_password_hash(u.hashed_password, password):
+            return u
+        else:
+            return False
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
 
 
 def connect_db(app):

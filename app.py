@@ -5,8 +5,8 @@ from flask import Flask, render_template, request, flash
 from flask import redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, Cafe, City
-from forms import AddEditCafeForm
+from models import db, connect_db, Cafe, City, User
+from forms import AddEditCafeForm, SignupForm
 from sqlalchemy.exc import IntegrityError
 
 from secrets import FLASK_SECRET_KEY
@@ -32,28 +32,28 @@ CURR_USER_KEY = "curr_user"
 NOT_LOGGED_IN_MSG = "You are not logged in."
 
 
-# @app.before_request
-# def add_user_to_g():
-#     """If we're logged in, add curr user to Flask global."""
+@app.before_request
+def add_user_to_g():
+    """If we're logged in, add curr user to Flask global."""
 
-#     if CURR_USER_KEY in session:
-#         g.user = User.query.get(session[CURR_USER_KEY])
+    if CURR_USER_KEY in session:
+        g.user = User.query.get(session[CURR_USER_KEY])
 
-#     else:
-#         g.user = None
-
-
-# def do_login(user):
-#     """Log in user."""
-
-#     session[CURR_USER_KEY] = user.id
+    else:
+        g.user = None
 
 
-# def do_logout():
-#     """Logout user."""
+def do_login(user):
+    """Log in user."""
 
-#     if CURR_USER_KEY in session:
-#         del session[CURR_USER_KEY]
+    session[CURR_USER_KEY] = user.id
+
+
+def do_logout():
+    """Logout user."""
+
+    if CURR_USER_KEY in session:
+        del session[CURR_USER_KEY]
 
 
 #######################################
@@ -144,5 +144,32 @@ def cafe_edit(cafe_id):
 
     #######################################
     # users
-
     
+    @app.route('/signup', methods=["GET", "POST"])
+    def user_signup():
+        """return sign up form and handle sign up """ 
+        form = SignupForm()
+
+        if form.validate_on_submit():
+            new_user = User.register(
+                        username=form.username.data,
+                        email=form.email.data,
+                        first_name=form.first_name.data,
+                        last_name=form.last_name.data,
+                        description=form.description.data,
+                        image_url=form.image_url.data,
+                        password=form.password.data
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        do_login(new_user)
+        
+        flash(f"You are signed up and logged in")
+        return redirect("/cafes")
+    
+    return render_template("auth/signup-form.html", form=form)
+
+
+        

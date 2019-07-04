@@ -6,7 +6,7 @@ from unittest import TestCase
 
 # from flask import session
 from app import app  # , CURR_USER_KEY
-from models import db, Cafe, City  # , User, Like
+from models import db, Cafe, City, User
 
 # Use test database and don't clutter tests with SQL
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql:///flaskcafe-emi-test"
@@ -63,7 +63,7 @@ CAFE_DATA = dict(
     image_url="http://testcafeimg.com/"
 )
 
-CAFE_DATA_EDIT= dict(
+CAFE_DATA_EDIT = dict(
     name="new-name",
     description="new-description",
     url="http://new-image.com/",
@@ -72,32 +72,32 @@ CAFE_DATA_EDIT= dict(
     image_url="http://new-image.com/"
 )
 
-# TEST_USER_DATA = dict(
-#     username="test",
-#     first_name="Testy",
-#     last_name="MacTest",
-#     description="Test Description.",
-#     email="test@test.com",
-#     password="secret",
-# )
+TEST_USER_DATA = dict(
+    username="test",
+    first_name="Testy",
+    last_name="MacTest",
+    description="Test Description.",
+    email="test@test.com",
+    password="secret",
+)
 
-# TEST_USER_DATA_EDIT = dict(
-#     first_name="new-fn",
-#     last_name="new-ln",
-#     description="new-description",
-#     email="new-email@test.com",
-#     image_url="http://new-image.com",
-# )
+TEST_USER_DATA_EDIT = dict(
+    first_name="new-fn",
+    last_name="new-ln",
+    description="new-description",
+    email="new-email@test.com",
+    image_url="http://new-image.com",
+)
 
-# TEST_USER_DATA_NEW = dict(
-#     username="new-username",
-#     first_name="new-fn",
-#     last_name="new-ln",
-#     description="new-description",
-#     password="secret",
-#     email="new-email@test.com",
-#     image_url="http://new-image.com",
-# )
+TEST_USER_DATA_NEW = dict(
+    username="new-username",
+    first_name="new-fn",
+    last_name="new-ln",
+    description="new-description",
+    password="secret",
+    email="new-email@test.com",
+    image_url="http://new-image.com",
+)
 
 # ADMIN_USER_DATA = dict(
 #     username="admin",
@@ -309,47 +309,46 @@ class CafeAdminViewsTestCase(TestCase):
 #######################################
 # users
 
+class UserModelTestCase(TestCase):
+    """Tests for the user model."""
 
-# class UserModelTestCase(TestCase):
-#     """Tests for the user model."""
+    def setUp(self):
+        """Before each test, add sample users."""
 
-#     def setUp(self):
-#         """Before each test, add sample users."""
+        User.query.delete()
 
-#         User.query.delete()
+        user = User.register(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         user = User.register(**TEST_USER_DATA)
-#         db.session.add(user)
+        db.session.commit()
 
-#         db.session.commit()
+        self.user = user
 
-#         self.user = user
+    def tearDown(self):
+        """After each test, remove all users."""
 
-#     def tearDown(self):
-#         """After each test, remove all users."""
+        User.query.delete()
+        db.session.commit()
 
-#         User.query.delete()
-#         db.session.commit()
+    def test_authenticate(self):
+        rez = User.authenticate("test", "secret")
+        self.assertEqual(rez, self.user)
 
-#     def test_authenticate(self):
-#         rez = User.authenticate("test", "secret")
-#         self.assertEqual(rez, self.user)
+    def test_authenticate_fail(self):
+        rez = User.authenticate("no-such-user", "secret")
+        self.assertEqual(rez, False)
 
-#     def test_authenticate_fail(self):
-#         rez = User.authenticate("no-such-user", "secret")
-#         self.assertEqual(rez, False)
+        rez = User.authenticate("test", "password")
+        self.assertEqual(rez, False)
 
-#         rez = User.authenticate("test", "password")
-#         self.assertEqual(rez, False)
+    def test_full_name(self):
+        self.assertEqual(self.user.get_full_name(), "Testy MacTest")
 
-#     def test_full_name(self):
-#         self.assertEqual(self.user.get_full_name(), "Testy MacTest")
-
-#     def test_register(self):
-#         u = User.register(**TEST_USER_DATA)
-#         # test that password gets bcrypt-hashed (all start w/$2b$)
-#         self.assertEqual(u.hashed_password[:4], "$2b$")
-#         db.session.rollback()
+    def test_register(self):
+        u = User.register(**TEST_USER_DATA)
+        # test that password gets bcrypt-hashed (all start w/$2b$)
+        self.assertEqual(u.hashed_password[:4], "$2b$")
+        db.session.rollback()
 
 
 # class AuthViewsTestCase(TestCase):
